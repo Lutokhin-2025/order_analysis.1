@@ -1,0 +1,1 @@
+2026-10-10 09:26:31,314 - ERROR - Файл 'test_orders.csv': отсутствуют обязательные колонки: ['order_id', 'person_id', 'order_date', 'total_amount', 'payment_method', 'shipping_method']

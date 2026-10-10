@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.idea/
+venv/
+.venv/
+data/*.csv
+!data/summary_report.csv
+!logs/errors.log
