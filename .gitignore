@@ -3,6 +3,3 @@ __pycache__/
 .idea/
 venv/
 .venv/
-data/*.csv
-!data/summary_report.csv
-!logs/errors.log
