@@ -18,6 +18,7 @@ class OrderAnalyzer:
         logs_dir: Path,
         status_col_name: str,
         delivered_status_value: str,
+        output_filename: str,
     ):
         self.data_dir = data_dir
         self.report_dir = report_dir
@@ -142,8 +143,12 @@ class OrderAnalyzer:
         return results
 
     def save_report(self, results: List[Dict]) -> Path:
-        output_path = self.report_dir / "summary_report.csv"
+        output_path = self.report_dir / config.OUTPUT_FILE_NAME
         self.report_dir.mkdir(parents=True, exist_ok=True)
-        final_df = pd.DataFrame(results).set_index("file_name")
+        final_df = pd.DataFrame(
+            columns=["file_name", "total_revenue", "order_count", "average_check"]
+        ).set_index("file_name")
+        if results:
+            final_df = pd.concat([final_df, pd.DataFrame(results).set_index("file_name")])
         final_df.to_csv(output_path, encoding="utf-8", float_format="%.2f")
         return output_path
