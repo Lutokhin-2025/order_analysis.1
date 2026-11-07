@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 import pandas as pd
 import logging
-import fnmatch
 import config
 
 logger = logging.getLogger(__name__)
@@ -32,7 +31,6 @@ class OrderAnalyzer:
         self.logs_dir.mkdir(exist_ok=True)
         log_path = self.logs_dir / "errors.log"
 
-
         for handler in logger.handlers[:]:
             logger.removeHandler(handler)
         file_handler = logging.FileHandler(log_path, mode='w', encoding='utf-8')
@@ -40,11 +38,16 @@ class OrderAnalyzer:
         logger.addHandler(file_handler)
         self.logger = logger
 
+
     def load_and_filter(self, filepath: Path) -> Optional[pd.DataFrame]:
         try:
             df = pd.read_csv(filepath, encoding="utf-8")
         except Exception as e:
             self._log_error(f"[{filepath.name}] Ошибка чтения CSV — {e}")
+            return None
+
+        if len(df.index) == 0:
+            self._log_error(f"[{filepath.name}] Файл пуст или содержит только заголовки.")
             return None
 
         required_cols = [
@@ -90,31 +93,23 @@ class OrderAnalyzer:
             "average_check": avg_check,
         }
 
-    def process_one_file(self, filepath: Path) -> Dict[str, Any]:
+    def process_one_file(self, filepath: Path) -> Optional[Dict[str, Any]]:
         df = self.load_and_filter(filepath)
 
         if df is not None and len(df.columns) > 0:
             self.processed_count += 1
 
-
-        elif df is None or len(df.index) == 0:
-            self._log_error(f"[{filepath.name}] Файл не содержит данных.")
-            return {
-                "file_name": filepath.name,
-                "total_revenue": 0.0,
-                "order_count": 0,
-                "average_check": 0.0,
-            }
+        if df is None or len(df.index) == 0:
+            return None
 
         filtered_df = df[
             df[self.status_col_name].str.lower() == self.delivered_status_value
         ].copy()
 
-
         metrics = {
             "file_name": filepath.name,
             "total_revenue": round(filtered_df["total_amount"].sum(), 2),
-            "order_count": len(filtered_df),
+            "order_count": int(len(filtered_df)),
             "average_check": (
                 round(filtered_df["total_amount"].mean(), 2)
                 if len(filtered_df) > 0 else 0.0
@@ -126,12 +121,13 @@ class OrderAnalyzer:
         self.logger.error(message)
         self.error_count += 1
 
+
     def process_all_files(self) -> list[dict]:
         results: list[dict] = []
         all_files = sorted(self.data_dir.iterdir())
         csv_files = [
             file for file in all_files
-            if fnmatch.fnmatch(file.name.lower(), "*.csv")
+            if file.name.lower().endswith('.csv')
         ]
 
         if not csv_files:
@@ -140,8 +136,8 @@ class OrderAnalyzer:
 
         for file in csv_files:
             result = self.process_one_file(file)
-            results.append(result)
-
+            if result is not None:
+                results.append(result)
 
         return results
 

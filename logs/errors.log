@@ -1,2 +1,1 @@
-2026-11-07 10:04:48,983 - ERROR - [test_orders.csv] Отсутствуют обязательные колонки: order_id, total_amount, status
-2026-11-07 10:04:48,983 - ERROR - [test_orders.csv] Файл не содержит данных.
+2026-11-07 12:05:01,789 - ERROR - [test_orders.csv] Отсутствуют обязательные колонки: order_id, total_amount, status
